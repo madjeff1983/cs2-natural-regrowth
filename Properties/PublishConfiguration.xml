@@ -1,0 +1,50 @@
+﻿<Publish>
+	<!--Id must be set in order to update existed mod. it is filled automatically by PDX Mods platform when mod is published for the first time-->
+	<ModId Value="" />
+	<!--Name of the mod to display to players-->
+	<DisplayName Value="Natural Regrowth" />
+	<!--Short description of the mod-->
+	<ShortDescription Value="Adult trees spread naturally, spawning saplings nearby that grow to maturity over time." />
+	<!--Long description of the mod. Single line or multi line. Supports minimal markdown subset-->
+	<LongDescription>
+		Natural Regrowth lets your forests grow on their own.
+
+		Mature trees periodically spawn saplings on nearby open ground. Each sapling then grows to maturity through the game's normal tree growth simulation, and once grown, begins spreading in turn. Over time, wooded areas fill in and expand the way real forests do, without any manual painting.
+
+		[h3]Features[/h3]
+		[list]
+		[*] Adult trees spawn saplings on suitable nearby terrain
+		[*] Saplings grow naturally using the base game's growth system
+		[*] A local density cap prevents runaway overgrowth and keeps performance healthy
+		[*] Adjustable reproduction rate, from a slow trickle to rapid spread
+		[/list]
+
+		[h3]Settings[/h3]
+		[list]
+		[*] [b]Reproduction Rate[/b] - how quickly trees spread. Set to 0% to pause reproduction entirely.
+		[*] [b]Local Density Cap[/b] - the maximum number of trees allowed in a small area before spreading stops there. Lower values keep forests sparser; higher values allow denser growth.
+		[/list]
+
+		[h3]Performance[/h3]
+		The mod is built on the game's job system (DOTS/ECS) and uses scheduled per-tree timers rather than per-frame checks, so it scales to large, heavily forested maps without meaningful overhead.
+
+		[h3]Notes[/h3]
+		This initial release covers trees. Bush and shrub reproduction may come in a future update.
+	</LongDescription>
+	<!--Thumbnail-->
+	<Thumbnail Value="Properties/Thumbnail.png" />
+	<!--Screenshot, can be set multiple times-->
+	<!--Tag, can be set multiple times-->
+	<Tag Value="Code Mod" />
+	<!--Link to the forum post where the mod can be discussed-->
+	<ForumLink Value="" />
+	<!--Version of the mod-->
+	<ModVersion Value="1.0.0" />
+	<!--Recommended version of the base game to use the mod-->
+	<GameVersion Value="1.6.*" />
+	<!--Dependency for the mod, can be set multiple times-->
+	<!--Change log for new version. Single line or multiline. Supports minimal markdown subset-->
+	<ChangeLog>Initial release. Adult trees spread saplings naturally, with adjustable rate and a local density cap.</ChangeLog>
+	<!--External link. supported types are discord, github, youtube, twitch, x, paypal, patreon-->
+	<ExternalLink Type="github" Url="https://github.com/madjeff1983/cs2-natural-regrowth" />
+</Publish>
