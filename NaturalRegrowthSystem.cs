@@ -103,7 +103,6 @@ namespace NaturalRegrowth
             {
                 m_EntityType = GetEntityTypeHandle(),
                 m_TreeType = GetComponentTypeHandle<Game.Objects.Tree>(true),
-                m_UpdateFrameType = GetSharedComponentTypeHandle<Game.Simulation.UpdateFrame>(),
                 m_TransformType = GetComponentTypeHandle<Transform>(true),
                 m_PrefabRefType = GetComponentTypeHandle<PrefabRef>(true),
                 m_CooldownType = GetComponentTypeHandle<ReproductionCooldown>(false),
@@ -138,7 +137,6 @@ namespace NaturalRegrowth
         {
             [ReadOnly] public EntityTypeHandle m_EntityType;
             [ReadOnly] public ComponentTypeHandle<Game.Objects.Tree> m_TreeType;
-            [ReadOnly] public SharedComponentTypeHandle<Game.Simulation.UpdateFrame> m_UpdateFrameType;
             [ReadOnly] public ComponentTypeHandle<Transform> m_TransformType;
             [ReadOnly] public ComponentTypeHandle<PrefabRef> m_PrefabRefType;
             public ComponentTypeHandle<ReproductionCooldown> m_CooldownType;
@@ -168,12 +166,6 @@ namespace NaturalRegrowth
                 bool hasCooldown = chunk.Has(ref m_CooldownType);
                 var cooldowns = hasCooldown ? chunk.GetNativeArray(ref m_CooldownType)
                                             : default;
-
-                // UpdateFrame is a shared component (per-chunk). All adults in
-                // this chunk share the same growth bucket; saplings inherit it
-                // so TreeGrowthSystem ticks them on the same schedule.
-                Game.Simulation.UpdateFrame chunkUpdateFrame =
-                    chunk.GetSharedComponent(m_UpdateFrameType);
 
                 var rng = m_RandomSeed.GetRandom(unfilteredChunkIndex);
 
@@ -238,8 +230,7 @@ namespace NaturalRegrowth
                     int count = CountNearby(candidate, m_DensityRadius);
                     if (count < m_DensityCap)
                     {
-                        SpawnSapling(parentPrefab, candidate,
-                            chunkUpdateFrame, ref rng);
+                        SpawnSapling(parentPrefab, candidate, ref rng);
                     }
 
                     // Reschedule regardless of success, so a blocked spot retries
@@ -250,15 +241,16 @@ namespace NaturalRegrowth
             }
 
             private void SpawnSapling(Entity parentPrefab,
-                float3 pos, Game.Simulation.UpdateFrame parentUpdateFrame,
-                ref Unity.Mathematics.Random rng)
+                float3 pos, ref Unity.Mathematics.Random rng)
             {
                 if (!m_ObjectDataLookup.TryGetComponent(parentPrefab, out var objData))
                     return;
 
-                // Mirror of Game.Debug.TreeSpawnSystem's recipe:
-                // create from the prefab's archetype, then set the
-                // distinguishing components. TreeGrowthSystem does the rest.
+                // Recipe based on the working Line Tool mod (algernon-A):
+                // create from the prefab's archetype, set PrefabRef + Transform,
+                // set the Tree state, tag Updated, and disable Decoration (see
+                // below). This produces a fully functional tree that grows and
+                // shows resource info via the game's own systems.
                 Entity child = m_CommandBuffer.CreateEntity(objData.m_Archetype);
 
                 m_CommandBuffer.SetComponent(child,
@@ -268,28 +260,26 @@ namespace NaturalRegrowth
                 m_CommandBuffer.SetComponent(child,
                     new Transform { m_Position = pos, m_Rotation = rot });
 
-                // Fresh sapling: no state flags, zero growth.
-                m_CommandBuffer.SetComponent(child,
-                    new Game.Objects.Tree { m_State = 0, m_Growth = 0 });
+                // Spawn as the youngest sapling. state = 0 is valid (map-native
+                // trees use it) and renders as a small sapling that then grows
+                // through the game's TreeGrowthSystem toward Teen -> Adult.
+                m_CommandBuffer.SetComponent(child, new Game.Objects.Tree
+                {
+                    m_State = 0,
+                    m_Growth = 0,
+                });
 
-                // Inherit the parent chunk's UpdateFrame bucket. UpdateFrame is
-                // an ISharedComponentData that groups trees into growth buckets;
-                // TreeGrowthSystem queries WithAll<UpdateFrame> and processes
-                // buckets on a schedule. A default bucket leaves the sapling in
-                // a group that never ticks, which is why it never grew.
-                m_CommandBuffer.SetSharedComponent(child, parentUpdateFrame);
-
-                // Tag as newly created + updated so the game's object-init
-                // pipeline finalizes the entity (render/batch data, search-tree
-                // registration, info-panel data such as wood amount).
-                m_CommandBuffer.AddComponent<Created>(child);
+                // Line Tool finalizes a placed object with just Updated.
                 m_CommandBuffer.AddComponent<Updated>(child);
 
-                // Applied marks the object as a finalized placed object (as
-                // opposed to a temp/preview). The post-placement init pass that
-                // wires trees into the growth simulation keys off this tag —
-                // without it the sapling renders but never grows or shows wood.
-                m_CommandBuffer.AddComponent<Applied>(child);
+                // The tree info panel's ResourceSection shows the WOOD row only
+                // when Decoration is present but NOT enabled (verified from the
+                // section's own visibility logic: it hides the row when
+                // Decoration is enabled). Native map trees have Decoration
+                // disabled, which is why they show WOOD. Archetype-created trees
+                // may default to enabled, so we explicitly DISABLE it to match
+                // native/placed trees and expose the WOOD attribute.
+                m_CommandBuffer.SetComponentEnabled<Decoration>(child, false);
             }
 
             private int CountNearby(float3 pos, float radius)
