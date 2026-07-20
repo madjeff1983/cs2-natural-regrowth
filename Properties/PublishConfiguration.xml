@@ -1,6 +1,6 @@
 ﻿<Publish>
 	<!--Id must be set in order to update existed mod. it is filled automatically by PDX Mods platform when mod is published for the first time-->
-	<ModId Value="" />
+	<ModId Value="151943" />
 	<!--Name of the mod to display to players-->
 	<DisplayName Value="Natural Regrowth" />
 	<!--Short description of the mod-->
