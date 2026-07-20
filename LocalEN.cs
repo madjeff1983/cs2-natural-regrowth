@@ -33,7 +33,11 @@ namespace NaturalRegrowth
 
                 { m_Setting.GetOptionLabelLocaleID(nameof(Setting.SpawnRadius)), "Spawn Radius" },
                 { m_Setting.GetOptionDescLocaleID(nameof(Setting.SpawnRadius)),
-                    "How far (in meters) from a parent tree a new sapling can appear. Larger values spread trees out more; smaller values keep offspring close to the parent. The density check samples an area twice this radius." },
+                    "How far (in metres) from a parent tree a new sapling can appear. Larger values spread trees out more; smaller values keep offspring close to the parent. The density check samples an area twice this radius." },
+
+                { m_Setting.GetOptionLabelLocaleID(nameof(Setting.GrowthRate)), "Growth Rate Multiplier" },
+                { m_Setting.GetOptionDescLocaleID(nameof(Setting.GrowthRate)),
+                    "How quickly young trees (saplings and teens) spawned by this mod mature. 1 is normal game speed with no changes. Higher values grow trees faster: at 2 they gain twice as much growth per step, up to 10 (ten times as fast). The timing between growth steps stays the same as the game's normal pace; only the amount changes." },
             };
         }
 

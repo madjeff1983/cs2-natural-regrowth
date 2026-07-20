@@ -33,11 +33,21 @@ namespace NaturalRegrowth
         [SettingsUISection(kSection, kMainGroup)]
         public int SpawnRadius { get; set; } = 15;
 
+        // Growth-rate multiplier for young trees (saplings and teens) spawned by
+        // this mod. 1 = normal game growth (the mod does not alter growth at all).
+        // 2 = grows 2x the amount per natural growth step, up to 10 = 10x. The
+        // timing between growth steps always matches the game's normal cadence;
+        // only the amount gained per step changes.
+        [SettingsUISlider(min = 1, max = 10, step = 1, scalarMultiplier = 1, unit = Unit.kInteger)]
+        [SettingsUISection(kSection, kMainGroup)]
+        public int GrowthRate { get; set; } = 1;
+
         public override void SetDefaults()
         {
             ReproductionRate = 50;
             LocalDensityCap = 12;
             SpawnRadius = 15;
+            GrowthRate = 1;
         }
     }
 }

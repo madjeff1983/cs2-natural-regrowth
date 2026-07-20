@@ -5,6 +5,9 @@
 
 		<!--The file where mod information which is required for publishing mod on PDX mods are stored-->
 		<PublishConfigurationPath>Properties\PublishConfiguration.xml</PublishConfigurationPath>
+
+		<!--Path to the text file holding your PDX login (line 1) and password (line 2)-->
+		<PDXAccountDataPath>C:\Users\jeffc\OneDrive\Desktop\pdx_account.txt</PDXAccountDataPath>
 	</PropertyGroup>
 
 	<!--Imports must be after PropertyGroup block-->

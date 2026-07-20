@@ -4,36 +4,44 @@
 	<!--Name of the mod to display to players-->
 	<DisplayName Value="Natural Regrowth" />
 	<!--Short description of the mod-->
-	<ShortDescription Value="Adult trees spread naturally, spawning saplings nearby that grow to maturity over time." />
+	<ShortDescription Value="Forests grow themselves. Adult trees spawn saplings nearby that mature over time and spread in turn, filling your map with living, expanding woodland." />
 	<!--Long description of the mod. Single line or multi line. Supports minimal markdown subset-->
 	<LongDescription>
-		Natural Regrowth lets your forests grow on their own.
+		Natural Regrowth brings your forests to life. Instead of static trees that only ever exist where you paint them, mature trees now reproduce on their own, scattering saplings onto nearby open ground. Each sapling grows to maturity, and once grown, begins spreading in turn.
 
-		Mature trees periodically spawn saplings on nearby open ground. Each sapling then grows to maturity through the game's normal tree growth simulation, and once grown, begins spreading in turn. Over time, wooded areas fill in and expand the way real forests do, without any manual painting.
+		Leave a few trees near a riverbank and come back later to find a thriving woodland. Over hours of play, sparse groves thicken, forest edges creep outward, and empty grassland slowly turns green, the way real forests reclaim the land. It all happens through the base game's own tree growth simulation, so it looks completely natural.
 
-		[h3]Features[/h3]
+		[h3]What it does[/h3]
 		[list]
-		[*] Adult trees spawn saplings on suitable nearby terrain
-		[*] Saplings grow naturally using the base game's growth system
-		[*] A local density cap prevents runaway overgrowth and keeps performance healthy
-		[*] Adjustable reproduction rate, from a slow trickle to rapid spread
+		[*] Adult trees periodically spawn saplings on suitable nearby terrain
+		[*] Saplings grow to full size through the game's normal growth system, then reproduce themselves
+		[*] Forests expand and fill in organically over time, with no manual painting
+		[*] A local density cap keeps growth realistic and performance healthy, preventing runaway overgrowth
 		[/list]
 
 		[h3]Settings[/h3]
 		[list]
-		[*] [b]Reproduction Rate[/b] - how quickly trees spread. Set to 0% to pause reproduction entirely.
-		[*] [b]Local Density Cap[/b] - the maximum number of trees allowed in a small area before spreading stops there. Lower values keep forests sparser; higher values allow denser growth.
+		[*] [b]Reproduction Rate[/b] - how quickly trees spread, from a slow, gradual trickle to rapid expansion. Set to 0% to pause reproduction entirely.
+		[*] [b]Local Density Cap[/b] - the maximum number of trees allowed in a small area before spreading stops there. Lower values keep forests sparse and park-like; higher values allow dense, closed-canopy woodland.
+		[*] [b]Spawn Radius[/b] - how far from a parent tree a new sapling can appear. Smaller values keep offspring clustered tightly; larger values let forests spread out faster.
+		[*] [b]Growth Rate Multiplier[/b] - how fast new saplings mature. Leave it at 1 for the natural game pace, or raise it up to 10x to watch young forests fill in quickly. Great for time-lapse growth or getting a new map green in a hurry.
 		[/list]
 
 		[h3]Performance[/h3]
-		The mod is built on the game's job system (DOTS/ECS) and uses scheduled per-tree timers rather than per-frame checks, so it scales to large, heavily forested maps without meaningful overhead.
+		Built entirely on the game's job system (DOTS/ECS), the mod uses scheduled per-tree timers instead of per-frame checks, so it scales comfortably to large, heavily forested maps without meaningful overhead.
 
 		[h3]Notes[/h3]
-		This initial release covers trees. Bush and shrub reproduction may come in a future update.
+		This release covers trees, bushes, and shrubs. Works with existing saves and can be safely added or removed at any time.
 	</LongDescription>
 	<!--Thumbnail-->
 	<Thumbnail Value="Properties/Thumbnail.png" />
 	<!--Screenshot, can be set multiple times-->
+	<Screenshot Value="Properties/Screenshots/1.jpg" />
+	<Screenshot Value="Properties/Screenshots/2.jpg" />
+	<Screenshot Value="Properties/Screenshots/3.jpg" />
+	<Screenshot Value="Properties/Screenshots/4.jpg" />
+	<Screenshot Value="Properties/Screenshots/5.jpg" />
+	<Screenshot Value="Properties/Screenshots/6.jpg" />
 	<!--Tag, can be set multiple times-->
 	<Tag Value="Code Mod" />
 	<!--Link to the forum post where the mod can be discussed-->
@@ -44,7 +52,7 @@
 	<GameVersion Value="1.6.*" />
 	<!--Dependency for the mod, can be set multiple times-->
 	<!--Change log for new version. Single line or multiline. Supports minimal markdown subset-->
-	<ChangeLog>Initial release. Adult trees spread saplings naturally, with adjustable rate and a local density cap.</ChangeLog>
+	<ChangeLog>Initial release. Adult trees spread saplings naturally that mature and reproduce in turn. Includes adjustable reproduction rate, spawn radius, local density cap, and a growth rate multiplier (1x-10x).</ChangeLog>
 	<!--External link. supported types are discord, github, youtube, twitch, x, paypal, patreon-->
 	<ExternalLink Type="github" Url="https://github.com/madjeff1983/cs2-natural-regrowth" />
 </Publish>

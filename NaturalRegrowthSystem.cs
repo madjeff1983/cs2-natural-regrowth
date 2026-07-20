@@ -31,6 +31,14 @@ namespace NaturalRegrowth
         public uint m_NextSpawnFrame;
     }
 
+    /// <summary>
+    /// Tag placed on trees this mod spawned. The growth-rate multiplier is only
+    /// applied to tagged young trees, so we accelerate our own saplings without
+    /// disturbing the natural growth pacing of the map's other vegetation. The
+    /// tag is removed once the tree matures to Adult (no longer needs driving).
+    /// </summary>
+    public struct ManagedSapling : IComponentData { }
+
     public partial class NaturalRegrowthSystem : GameSystemBase
     {
         // How often (in frames) we scan for due reproducers. The scan itself is
@@ -43,7 +51,9 @@ namespace NaturalRegrowth
         private EndFrameBarrier m_Barrier;   // valid to create ECBs from in GameSimulation phase
 
         private EntityQuery m_VegetationQuery;
+        private EntityQuery m_ManagedSaplingQuery;
         private uint m_LastScanFrame;
+        private uint m_LastGrowthFrame;
 
         protected override void OnCreate()
         {
@@ -74,15 +84,38 @@ namespace NaturalRegrowth
             });
 
             RequireForUpdate(m_VegetationQuery);
+
+            // Mod-spawned young trees whose growth we drive (for the multiplier).
+            m_ManagedSaplingQuery = GetEntityQuery(new EntityQueryDesc
+            {
+                All = new[]
+                {
+                    ComponentType.ReadOnly<Game.Objects.Tree>(),
+                    ComponentType.ReadOnly<ManagedSapling>(),
+                },
+                None = new[]
+                {
+                    ComponentType.ReadOnly<Deleted>(),
+                    ComponentType.ReadOnly<Temp>(),
+                },
+            });
         }
 
         protected override void OnUpdate()
         {
             var setting = Mod.Setting;
-            if (setting == null || setting.ReproductionRate <= 0)
-                return; // reproduction paused
+            if (setting == null)
+                return;
 
             uint frame = m_SimulationSystem.frameIndex;
+
+            // --- Growth-rate driving (independent of reproduction) ---
+            DriveGrowth(setting, frame);
+
+            // --- Reproduction ---
+            if (setting.ReproductionRate <= 0)
+                return; // reproduction paused
+
             if (frame - m_LastScanFrame < kScanIntervalFrames)
                 return;
             m_LastScanFrame = frame;
@@ -128,6 +161,53 @@ namespace NaturalRegrowth
 
             m_ObjectSearchSystem.AddStaticSearchTreeReader(handle);
             m_TerrainSystem.AddCPUHeightReader(handle);
+            m_Barrier.AddJobHandleForProducer(handle);
+            Dependency = handle;
+        }
+
+        // The game grows a young tree by a small amount (~4 growth, player-
+        // measured) once per update-frame bucket cycle (~8192 sim frames). We
+        // match that cadence so any supplemental growth we add lands on the same
+        // schedule — the TIMING between increments never changes, only the AMOUNT.
+        private const uint kGrowthPeriodFrames = 8192;
+
+        // The game's measured vanilla growth increment per cycle.
+        private const int kVanillaGrowthPerStep = 4;
+
+        private void DriveGrowth(Setting setting, uint frame)
+        {
+            int rate = math.clamp(setting.GrowthRate, 1, 10);
+
+            // Setting 1 = vanilla: do nothing. The game's own TreeGrowthSystem
+            // grows our saplings at the normal rate with no interference.
+            if (rate == 1)
+                return;
+
+            // Settings 2..10 run on the game's cadence and add supplemental
+            // growth so the total amount per cycle is rate x vanilla, at
+            // unchanged timing.
+            if (frame - m_LastGrowthFrame < kGrowthPeriodFrames)
+                return;
+            m_LastGrowthFrame = frame;
+
+            if (m_ManagedSaplingQuery.IsEmptyIgnoreFilter)
+                return;
+
+            // Add (rate - 1) vanilla-steps on top of the game's own increment,
+            // so total = rate x vanilla per cycle.
+            int extraGrowth = (rate - 1) * kVanillaGrowthPerStep;
+
+            var ecb = m_Barrier.CreateCommandBuffer();
+
+            var job = new GrowthJob
+            {
+                m_EntityType = GetEntityTypeHandle(),
+                m_TreeType = GetComponentTypeHandle<Game.Objects.Tree>(false),
+                m_GrowthPerStep = extraGrowth,
+                m_CommandBuffer = ecb.AsParallelWriter(),
+            };
+
+            var handle = job.ScheduleParallel(m_ManagedSaplingQuery, Dependency);
             m_Barrier.AddJobHandleForProducer(handle);
             Dependency = handle;
         }
@@ -280,6 +360,10 @@ namespace NaturalRegrowth
                 // may default to enabled, so we explicitly DISABLE it to match
                 // native/placed trees and expose the WOOD attribute.
                 m_CommandBuffer.SetComponentEnabled<Decoration>(child, false);
+
+                // Tag as a mod-managed sapling so the growth-rate multiplier
+                // applies to it (and only to our own spawns).
+                m_CommandBuffer.AddComponent<ManagedSapling>(child);
             }
 
             private int CountNearby(float3 pos, float radius)
@@ -307,6 +391,72 @@ namespace NaturalRegrowth
                 {
                     if (MathUtils.Intersect(bounds.m_Bounds.xz, m_Bounds.xz))
                         m_Count++;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Applies the growth-rate multiplier to mod-managed young trees by adding
+        /// growth points each step, mirroring the game's own promotion model
+        /// (promote at >= 256, reset growth to 0). Sapling (state 0) -> Teen (1)
+        /// -> Adult (2). Once a tree reaches Adult, its ManagedSapling tag is
+        /// removed so we stop driving it and it behaves like any other tree.
+        /// </summary>
+        [BurstCompile]
+        private struct GrowthJob : IJobChunk
+        {
+            public EntityTypeHandle m_EntityType;
+            public ComponentTypeHandle<Game.Objects.Tree> m_TreeType;
+            public int m_GrowthPerStep;
+            public EntityCommandBuffer.ParallelWriter m_CommandBuffer;
+
+            public void Execute(in ArchetypeChunk chunk, int unfilteredChunkIndex,
+                bool useEnabledMask, in v128 chunkEnabledMask)
+            {
+                var entities = chunk.GetNativeArray(m_EntityType);
+                var trees = chunk.GetNativeArray(ref m_TreeType);
+
+                for (int i = 0; i < trees.Length; i++)
+                {
+                    var tree = trees[i];
+
+                    // Only drive young stages (sapling state 0 and Teen). Anything
+                    // already Adult or beyond is left alone (and untagged).
+                    bool isTeen = (tree.m_State & TreeState.Teen) != 0;
+                    bool isSapling = tree.m_State == 0;
+                    if (!isSapling && !isTeen)
+                    {
+                        m_CommandBuffer.RemoveComponent<ManagedSapling>(unfilteredChunkIndex, entities[i]);
+                        continue;
+                    }
+
+                    int growth = tree.m_Growth + m_GrowthPerStep;
+                    if (growth < 256)
+                    {
+                        tree.m_Growth = (byte)growth;
+                        trees[i] = tree;
+                        continue;
+                    }
+
+                    // Promote to the next stage, reset growth.
+                    if (isSapling)
+                    {
+                        // Sapling -> Teen.
+                        tree.m_State = TreeState.Teen;
+                        tree.m_Growth = 0;
+                        trees[i] = tree;
+                    }
+                    else // isTeen
+                    {
+                        // Teen -> Adult. Clear the low state bits and set Adult,
+                        // matching the game's (state & 254) | 2 transition.
+                        tree.m_State = (tree.m_State & (TreeState)254) | TreeState.Adult;
+                        tree.m_Growth = 0;
+                        trees[i] = tree;
+
+                        // Fully grown — stop managing it.
+                        m_CommandBuffer.RemoveComponent<ManagedSapling>(unfilteredChunkIndex, entities[i]);
+                    }
                 }
             }
         }
