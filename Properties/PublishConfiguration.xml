@@ -8,29 +8,27 @@
 	<!--Long description of the mod. Single line or multi line. Supports minimal markdown subset-->
 	<LongDescription>
 		Natural Regrowth brings your forests to life. Instead of static trees that only ever exist where you paint them, mature trees now reproduce on their own, scattering saplings onto nearby open ground. Each sapling grows to maturity, and once grown, begins spreading in turn.
-
+		
 		Leave a few trees near a riverbank and come back later to find a thriving woodland. Over hours of play, sparse groves thicken, forest edges creep outward, and empty grassland slowly turns green, the way real forests reclaim the land. It all happens through the base game's own tree growth simulation, so it looks completely natural.
 
-		[h3]What it does[/h3]
-		[list]
-		[*] Adult trees periodically spawn saplings on suitable nearby terrain
-		[*] Saplings grow to full size through the game's normal growth system, then reproduce themselves
-		[*] Forests expand and fill in organically over time, with no manual painting
-		[*] A local density cap keeps growth realistic and performance healthy, preventing runaway overgrowth
-		[/list]
+		WHAT IT DOES
 
-		[h3]Settings[/h3]
-		[list]
-		[*] [b]Reproduction Rate[/b] - how quickly trees spread, from a slow, gradual trickle to rapid expansion. Set to 0% to pause reproduction entirely.
-		[*] [b]Local Density Cap[/b] - the maximum number of trees allowed in a small area before spreading stops there. Lower values keep forests sparse and park-like; higher values allow dense, closed-canopy woodland.
-		[*] [b]Spawn Radius[/b] - how far from a parent tree a new sapling can appear. Smaller values keep offspring clustered tightly; larger values let forests spread out faster.
-		[*] [b]Growth Rate Multiplier[/b] - how fast new saplings mature. Leave it at 1 for the natural game pace, or raise it up to 10x to watch young forests fill in quickly. Great for time-lapse growth or getting a new map green in a hurry.
-		[/list]
+		Adult trees periodically spawn saplings on suitable nearby terrain
+		Saplings grow to full size through the game's normal growth system, then reproduce themselves
+		Forests expand and fill in organically over time, with no manual painting
+		A local density cap keeps growth realistic and performance healthy, preventing runaway overgrowth
 
-		[h3]Performance[/h3]
+		SETTINGS
+
+		Reproduction Rate: how quickly trees spread, from a slow, gradual trickle to rapid expansion. Set to 0% to pause reproduction entirely.
+		Local Density Cap: the maximum number of trees allowed in a small area before spreading stops there. Lower values keep forests sparse and park-like; higher values allow dense, closed-canopy woodland.
+		Spawn Radius: how far from a parent tree a new sapling can appear. Smaller values keep offspring clustered tightly; larger values let forests spread out faster.
+		Growth Rate Multiplier: how fast new saplings mature. Leave it at 1 for the natural game pace, or raise it up to 10x to watch young forests fill in quickly. Great for time-lapse growth or getting a new map green in a hurry.
+
+		PERFORMANCE
 		Built entirely on the game's job system (DOTS/ECS), the mod uses scheduled per-tree timers instead of per-frame checks, so it scales comfortably to large, heavily forested maps without meaningful overhead.
 
-		[h3]Notes[/h3]
+		NOTES
 		This release covers trees, bushes, and shrubs. Works with existing saves and can be safely added or removed at any time.
 	</LongDescription>
 	<!--Thumbnail-->
@@ -47,7 +45,7 @@
 	<!--Link to the forum post where the mod can be discussed-->
 	<ForumLink Value="" />
 	<!--Version of the mod-->
-	<ModVersion Value="1.0.0" />
+	<ModVersion Value="1.0.2" />
 	<!--Recommended version of the base game to use the mod-->
 	<GameVersion Value="1.6.*" />
 	<!--Dependency for the mod, can be set multiple times-->
